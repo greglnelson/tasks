@@ -3,6 +3,50 @@
 Smoke test of <https://greglnelson.github.io/react-hooks-typescript-tome/> against the
 `tasks` repository, one chapter at a time, following the book's own instructions verbatim.
 
+## Summary
+
+Every task in the book was merged and solved by following the chapters exactly. **The book
+works.** All 12 task branches merge, all tasks are solvable as written, and the finished
+project ends at **89/89 tests passing**, `tsc` clean, `npm run lint` clean, and
+`npm run build` successful. Each chapter's app was also rendered in a real headless browser,
+not just asserted against in jsdom — which is how the most serious defect was found.
+
+| # | Chapter | Task branches | Outcome |
+| --- | --- | --- | --- |
+| 1 | Setup | `task-first-branch` | ✅ works |
+| 2 | Basic App | `task-html-css` | ✅ works — 2 bugs found and fixed |
+| 3 | TypeScript | `task-functions`, `task-arrays`, `task-objects`, `task-nested` | ✅ works |
+| 4 | Using State | `task-state`, `task-components`, `task-forms` | ✅ works — 1 bug found and fixed |
+| 5 | Complex Representations | `task-quizzer` | ⚠️ scaffolding stale — 1 bug fixed, 1 needs upstream |
+| 6 | Your Own App | — | ❌ page does not exist |
+| 7 | The Lost Chapters | — | ✅ content complete — 1 sample does not compile |
+
+### Fixed in this repository
+
+| ID | Problem |
+| --- | --- |
+| F26-08 | Bootstrap's CSS was never installed or imported, so every `<Button>`, `Container`, `Row` and `Col` in the course rendered unstyled and columns stacked vertically — while all tests passed |
+| F26-09 | The Chapter 2 "change the header background color" test could never fail; students got 2 points for doing nothing |
+| F26-16 | `task-state` shipped a second ESLint config (`.eslintrc.json`) that ESLint silently ignores |
+| F26-20 | The provided Chapter 5 `Quizzer.tsx` / `Quizzer.test.tsx` failed `npm run lint` out of the box |
+
+### Needs a decision from you (cannot be fixed from this repo)
+
+| ID | Problem |
+| --- | --- |
+| F26-01 | The book still forks and pulls from `COS420-Fall24`. Every `git fetch upstream task-*` in every chapter resolves there. **Gates everything else for F26.** |
+| F26-22 | Chapter 6 ("Your Own App") is an empty "Coming soon" stub, exactly where the book hands off to the team project |
+| F26-19 | `task-quizzer` is still the Delaware CISC275 branch; its merge conflict traps a student into importing a component that no longer exists |
+| F26-12 | `task-objects` starter code does not type-check, so `npm run start` fails before the student writes a line |
+| F26-23 | The "CORRECT version" in the Re-wrapping States page does not compile (`error TS1005`) |
+
+The single most valuable finding is **F26-08**: it is a case where a green test suite
+certified a visibly broken page for the entire course. It is also the best teaching example
+in the whole smoke test — tests passed because jsdom never loads CSS, so the classes
+`btn btn-primary` were present with no stylesheet behind them.
+
+Full detail, with commands and output, follows.
+
 Environment used for the smoke test:
 
 | Tool | Version |
