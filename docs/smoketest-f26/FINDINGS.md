@@ -472,3 +472,89 @@ makes this page an unusually good instrument for studying how an AI assistant be
 *poorly specified* brief versus a tested one — the requirements are real, independent, and
 countable. If the Quizzer is used that way, F26-19 and F26-20 should be fixed first, so that
 students are measuring the AI rather than fighting stale scaffolding.
+
+---
+
+## Chapter 6 — Your Own App
+
+#### F26-22 — Chapter 6 does not exist · **BLOCKER (for anyone following the book start to finish)**
+
+`https://greglnelson.github.io/react-hooks-typescript-tome/6-journey/` is a stub. The entire
+page body is:
+
+> **Coming soon**
+>
+> Oops! This page is not yet ready. Please be patient while we finish it up.
+
+Its table of contents advertises three sections — *User stories*, *Agile*, *Sketching out
+your app* — none of which exist, and there are no sub-pages. There is no task, no branch, no
+content of any kind.
+
+This is the chapter where the book hands off from guided tasks to the student's own team
+project, so it is the single largest content gap. Chapter 5 sends students here ("Once
+you're done submitting, we can start our own app"), and Chapter 5's Quizzer task explicitly
+leans on process material — "Gather requirements / Sketch the application / Develop the data
+model" — that Chapter 6 is supposed to teach.
+
+## Chapter 7 — The Lost Chapters
+
+Four reference pages, none with a task branch. All four are content-complete (no "coming
+soon" stubs) and all six screenshots on the Sharing Code page load (verified HTTP 200).
+The Records and Re-wrapping pages are the most conceptually valuable in the book — they are
+the clearest treatment of lookup types and of why lifting state matters — and it is a shame
+they are filed under "Lost Chapters".
+
+#### F26-23 — The "CORRECT version" in Re-wrapping States does not compile · **BUG**
+
+`7-extras/wrapping.html` contrasts a wrong example with a corrected one. The corrected one
+declares:
+
+```tsx
+function TeamView(
+    {team, teams, setTeams}: {team: Team, teams: Team[], setTeams: (t: Team[])}
+): JSX.Element {
+```
+
+`setTeams: (t: Team[])` is not a valid type — a function type needs a return type. Compiled
+with the exact TypeScript version this course pins (4.9.5):
+
+```
+error TS1005: '=>' expected.
+```
+
+It should be `setTeams: (t: Team[]) => void`. A student who copies the page's own *corrected*
+code gets a syntax error, on the page whose entire purpose is showing them the right way.
+
+#### F26-24 — Record examples omit the `key` prop the book insists on · **PAPERCUT**
+
+`7-extras/records.html` renders lists in three separate examples like this:
+
+```tsx
+{Object.keys(GRADES).map((user: string) => (
+    <li>User: {user}</li>
+))}
+```
+
+No `key`. React logs "Each child in a list should have a unique key prop" for every one of
+them. Chapter 4 is emphatic about this:
+
+> the basic idea is that we must provide a `key` attribute to help React distinguish between different adjacent elements created from the `map`. It'll be easy to forget, but can often be the source of many errors.
+
+The Re-wrapping page on the very next tab does use `key` correctly, so this is an
+inconsistency within the same chapter rather than a difference of opinion.
+
+#### F26-25 — Book-wide: code samples use `JSX.Element`, the repo uses `React.JSX.Element` · **PAPERCUT**
+
+Every code sample in the book declares `function App(): JSX.Element`, using the bare global
+`JSX` namespace. Every component in the tasks repository uses `React.JSX.Element`. TypeScript
+accepts both, so this is invisible until a student pastes a book sample into their project,
+at which point the course's own ESLint config rejects it:
+
+```
+error  'JSX' is not defined  no-undef
+```
+
+This is the same root cause as F26-20, where the provided `Quizzer.tsx` shipped with the
+error. Worth a single pass over the book's samples, particularly because the global `JSX`
+namespace is removed in React 19's types — so this will stop being cosmetic on the next
+major React upgrade.
