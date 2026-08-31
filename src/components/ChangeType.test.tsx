@@ -19,14 +19,14 @@ describe("ChangeType Component tests", () => {
 
     test("(1 pts) There is a button labeled Change Type", () => {
         const changeTypeButton = screen.getByRole("button", {
-            name: /Change Type/i
+            name: /Change Type/i,
         });
         expect(changeTypeButton).toBeInTheDocument();
     });
 
     test("(1 pts) Clicking the button changes the type.", async () => {
         const changeTypeButton = screen.getByRole("button", {
-            name: /Change Type/i
+            name: /Change Type/i,
         });
         await act(async () => {
             changeTypeButton.click();
@@ -41,7 +41,7 @@ describe("ChangeType Component tests", () => {
 
     test("(1 pts) Clicking the button twice keeps the type the same.", async () => {
         const changeTypeButton = screen.getByRole("button", {
-            name: /Change Type/i
+            name: /Change Type/i,
         });
         await act(async () => {
             changeTypeButton.click();

@@ -12,13 +12,13 @@ describe("RevealAnswer Component tests", () => {
     });
     test("(1 pts) There is a Reveal Answer button", () => {
         const revealButton = screen.getByRole("button", {
-            name: /Reveal Answer/i
+            name: /Reveal Answer/i,
         });
         expect(revealButton).toBeInTheDocument();
     });
     test("(1 pts) Clicking Reveal Answer button reveals the '42'", async () => {
         const revealButton = screen.getByRole("button", {
-            name: /Reveal Answer/i
+            name: /Reveal Answer/i,
         });
         await act(async () => {
             revealButton.click();
@@ -28,7 +28,7 @@ describe("RevealAnswer Component tests", () => {
     });
     test("(1 pts) Clicking Reveal Answer button twice hides the '42'", async () => {
         const revealButton = screen.getByRole("button", {
-            name: /Reveal Answer/i
+            name: /Reveal Answer/i,
         });
         await act(async () => {
             revealButton.click();
