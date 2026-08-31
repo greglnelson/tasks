@@ -379,3 +379,96 @@ meant to go (also misspelled). Combined with `glone` for `clone`, `databse`, `ga
 and `similiarities` on the same page, this reads as the least-finished page in the book.
 It is also the only page that asks students to set up a Google Cloud service, i.e. the place
 where they can least afford ambiguity.
+
+---
+
+## Chapter 5 — Complex Representations
+
+### 5-complex/examples.html — Nested Examples
+
+Reading-only ("No Task"). The worked examples reference the companion application
+`frontend-fun/movie-records`, which is **live and public** (verified by `git ls-remote`).
+The prose links into it with pinned-commit permalinks, which is the right way to do it —
+they will not rot as that repo evolves.
+
+### 5-complex/complex.html — Full Application (Quizzer)
+
+**Scope note:** this task is the open-ended, multi-week Quizzer project. The book itself
+says "we do not really expect you to finish all of the task 100%", and grading is by rubric
+(8 of 14 requirements plus tests plus a sketch = 100%). Building a full quiz application is
+not what a smoke test can meaningfully verify, so what was checked here is that the *task
+infrastructure* works: the branch merges, the provided scaffolding compiles, the tests run,
+and the project still builds. Result: ✅ **89/89 tests pass**, `tsc` clean, lint clean —
+after fixing two defects in the provided scaffolding.
+
+#### F26-19 — `task-quizzer` is stale: it is still the Delaware CISC275 version · **BUG**
+
+`upstream/task-quizzer` was branched before the Fall 2024 rework and never refreshed. Its
+`src/App.tsx` still reads:
+
+```tsx
+<header className="App-header">
+    UD CISC275 with React Hooks and TypeScript
+</header>
+```
+
+and it imports six components that the current, reduced course never introduces:
+`StartAttempt`, `CycleHoliday`, `ShoveBox`, `GiveAttempts`, `ChangeColor`, and it ships
+their files and tests.
+
+Git's three-way merge saves the student here — because our side deliberately deleted those
+files and changed the header, those changes win and the merge only adds `src/quizzer/`.
+**But the conflict it does raise is a trap.** The conflicting hunk is the import block:
+
+```
+<<<<<<< HEAD
+=======
+import { ChangeColor } from "./form-components/ChangeColor";
+import { Quizzer } from "./quizzer/Quizzer";
+>>>>>>> upstream/task-quizzer
+```
+
+A student who resolves this with VS Code's **"Accept Both Changes"** — the single most
+natural action, and the one the video linked from Chapter 4 demonstrates — gets:
+
+```
+$> npx tsc --noEmit
+src/App.tsx(13,29): error TS2307: Cannot find module './form-components/ChangeColor'
+   or its corresponding type declarations.
+```
+
+**Verified by actually doing it.** The student is then debugging a missing module they never
+heard of, in a file they did not write, at the start of the largest project in the course.
+The fix belongs upstream: regenerate `task-quizzer` from the current `main` so it carries
+only `src/quizzer/`.
+
+#### F26-20 — The provided Quizzer scaffolding fails lint out of the box · **BUG · FIXED**
+
+The two files the chapter hands students both fail `npm run lint`:
+
+```
+src/quizzer/Quizzer.test.tsx
+  2:18  error  'screen' is defined but never used  @typescript-eslint/no-unused-vars
+src/quizzer/Quizzer.tsx
+  3:28  error  'JSX' is not defined                no-undef
+```
+
+`Quizzer.tsx` declares `function Quizzer(): JSX.Element` using the bare global `JSX`
+namespace, while every other component in the repo uses `React.JSX.Element`. TypeScript
+accepts it (`tsc` is clean), so this is ESLint-only — which makes it more confusing, not
+less: the type checker says fine, the linter says undefined.
+
+**Fix applied:** `Quizzer.tsx` now returns `React.JSX.Element`, matching the rest of the
+repo; and the placeholder test now actually asserts the component renders
+(`expect(screen.getByText(/Quizzer/i)).toBeInTheDocument()`) instead of importing `screen`
+and never using it. That fixes the lint error *and* means the starter test is a real test.
+The "Up to you to decide what the rest of your tests are!" invitation is preserved.
+
+#### F26-21 — Worth knowing if the Quizzer is assigned as an AI exercise · **NOTE**
+
+The 14 requirements on this page are stated as one flat bulleted list with no tests and no
+data model, and the chapter explicitly says a vague requirement is the student's call. That
+makes this page an unusually good instrument for studying how an AI assistant behaves on a
+*poorly specified* brief versus a tested one — the requirements are real, independent, and
+countable. If the Quizzer is used that way, F26-19 and F26-20 should be fixed first, so that
+students are measuring the AI rather than fighting stale scaffolding.
