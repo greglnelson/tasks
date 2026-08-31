@@ -602,3 +602,20 @@ This is the same root cause as F26-20, where the provided `Quizzer.tsx` shipped 
 error. Worth a single pass over the book's samples, particularly because the global `JSX`
 namespace is removed in React 19's types — so this will stop being cosmetic on the next
 major React upgrade.
+
+---
+
+## Repository hygiene
+
+#### F26-26 — `.gitignore` ignores `package-lock.json`, which the book tells students to commit · **NOTE**
+
+`.gitignore` contains a bare `package-lock.json` entry, while the Environment Setup chapter
+says:
+
+> (Note: you may see another file `package-lock.json` as changed. If so, you should also `add` that file.
+
+In practice this is harmless today, because `package-lock.json` is already tracked and
+`.gitignore` has no effect on tracked files — the book's instruction works. But the two
+directly contradict each other, and the CI workflow runs `npm ci`, which *requires* the
+lockfile. If anyone ever untracks it, it will not come back without `git add -f`, and CI
+will break. The entry should be removed.
