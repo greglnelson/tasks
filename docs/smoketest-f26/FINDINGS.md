@@ -287,3 +287,95 @@ The upstream repo carries both `task-nested` and `updated-task-nested`. The book
 `task-nested`, which is correct: the only difference between them is one `package-lock.json`
 commit (the same `dev` → `devOptional` metadata churn as F26-05). Nothing is broken, but a
 student browsing the branch list may reasonably think they are on the wrong one.
+
+---
+
+## Chapter 4 — Using State
+
+Three tasks plus a Firebase page. All three tasks work; the chapter is in good shape.
+
+| Task | Branch | Result |
+| --- | --- | --- |
+| State | `task-state` | ✅ 57/57 cumulative |
+| Components | `task-components` | ✅ 71/71 cumulative |
+| Forms | `task-forms` | ✅ **88/88 cumulative** |
+
+`npx tsc --noEmit` clean and `npm run lint` clean after each task. The finished Chapter 4 app
+was rendered in a real headless browser and every component behaves as the chapter describes.
+
+### The merge conflicts here are deliberate, and the book handles them well
+
+Merging `task-state` produces conflicts in `src/App.tsx` and `src/nested.ts`, and merging
+`task-forms` conflicts in `src/App.tsx` again. This is **by design**, and the State chapter
+devotes a whole "Merge Conflicts" section to it:
+
+> Unfortunately, it is extremely likely that you will encounter "merge" conflicts between your code and our code. These conflicts occur because we are providing edits to a file that you have also edited.
+
+It links an ~8 minute video, gives explicit permission to delete `HtmlCss.test.tsx` and
+`text.test.tsx` on the new branch, and adds the nice guard rail:
+
+> (Do not misinterpret this to mean the general way to "fix" merge conflicts is to just delete files)
+
+That is genuinely good pedagogy and the smoke test confirms it plays out as written. One
+caveat worth knowing: **`upstream/task-state` reformats every file** (Prettier's
+`trailingComma` moved from `es5` to `all`), so the `nested.ts` conflict is *purely
+whitespace* — a student is asked to resolve a scary-looking conflict where neither side
+differs in meaning. Regenerating that branch with the current Prettier settings would remove
+a conflict that teaches nothing.
+
+Note also the one place where the book's guidance is load-bearing: `task-state`'s `App.tsx`
+drops the Chapter 1 and 2 content entirely. Taking it wholesale breaks 7 previously-passing
+tests — which is exactly why the chapter grants permission to delete those two test files.
+Anyone reworking this chapter must keep that paragraph.
+
+#### F26-16 — `task-state` ships a second, dead ESLint config · **BUG · FIXED**
+
+`task-state` adds `.eslintrc.json` while `.eslintrc.js` already exists. ESLint 8 resolves
+`.eslintrc.js` first and **silently ignores** the JSON file. Verified with
+`npx eslint --print-config src/App.tsx`: none of the JSON config's rules (`quotes`, `indent`,
+`brace-style`, `prettier/prettier`) are in effect, while `.eslintrc.js`'s rules are.
+
+So the repo carries two configs that disagree with each other, one of which does nothing. A
+student who tries to change a lint rule by editing `.eslintrc.json` will see no effect and
+have no way to understand why.
+
+**Fix applied:** deleted `.eslintrc.json`. `npm run lint` still passes.
+
+#### F26-17 — The provided starter components are not lint-clean · **PAPERCUT**
+
+Straight after merging `task-state`, before the student writes anything:
+
+```
+$> npx eslint src/components/RevealAnswer.tsx
+  1:17  error  'useState' is defined but never used  @typescript-eslint/no-unused-vars
+  2:10  error  'Button' is defined but never used    @typescript-eslint/no-unused-vars
+```
+
+The stubs import `useState` and `Button` for the student to use, which is a kindness — but
+`npm run lint` runs with `--max-warnings 0`, and the deploy workflow runs `npm run
+eslint-output` on every push to `main`. The course asks students to keep lint clean while
+handing them code that is not. Worth either seeding the stubs so they lint clean, or saying
+plainly in the chapter that lint will be red until the components are implemented.
+
+### 4-state/firebase.html — Firebase
+
+No task branch; this page sends students to a separate repository. Both linked repos are
+reachable: `COS420-Fall24/cos420-broken-firebase` (branch `master`) and
+`TSchotter/Getting-started-with-Firebase`. So the exercise is still runnable — subject to
+F26-01, since the broken-firebase repo is also under the Fall 2024 org.
+
+#### F26-18 — The Firebase page has an unfinished sentence and a missing screenshot · **PAPERCUT**
+
+The page reads:
+
+> Go ahead and glone the repository above, then run …
+>
+> Then run the tests to make sure they run. You should see this output:
+>
+> screnshot
+
+"then run …" trails off unfinished, and "screnshot" is a placeholder where an image was
+meant to go (also misspelled). Combined with `glone` for `clone`, `databse`, `gaurdrails`
+and `similiarities` on the same page, this reads as the least-finished page in the book.
+It is also the only page that asks students to set up a Google Cloud service, i.e. the place
+where they can least afford ambiguity.
