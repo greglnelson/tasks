@@ -2,6 +2,8 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import App from "./App";
 import userEvent from "@testing-library/user-event";
+import fs from "fs";
+import path from "path";
 
 describe("Some HTML Elements are added.", () => {
     test("(2 pts) There is a heading", () => {
@@ -29,9 +31,22 @@ describe("(2 pts) Some basic CSS is added.", () => {
     test("The background color of the header area is different", () => {
         render(<App />);
         const banner = screen.getByRole("banner");
-        expect(banner).not.toHaveStyle({
-            "background-color": "rgb(40, 44, 52)",
-        });
+        expect(banner).toBeInTheDocument();
+
+        // Jest renders into jsdom, which does not load `.css` files at all, so
+        // asking the rendered element for its background color would report
+        // "nothing" no matter what App.css says. We therefore read the
+        // stylesheet itself and check the rule the <header> actually uses.
+        const css = fs.readFileSync(path.join(__dirname, "App.css"), "utf-8");
+        const headerRule = /\.App-header\s*\{([^}]*)\}/.exec(css);
+        expect(headerRule).not.toBeNull();
+        const background = /background-color\s*:\s*([^;]+);/.exec(
+            (headerRule as RegExpExecArray)[1],
+        );
+        expect(background).not.toBeNull();
+        expect(
+            (background as RegExpExecArray)[1].trim().toLowerCase(),
+        ).not.toEqual("#282c34");
     });
 });
 
