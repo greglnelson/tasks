@@ -6,7 +6,7 @@ Smoke test of <https://greglnelson.github.io/react-hooks-typescript-tome/> again
 ## Summary
 
 Every task in the book was merged and solved by following the chapters exactly. **The book
-works.** All 12 task branches merge, all tasks are solvable as written, and the finished
+works.** All 10 task branches merge, all tasks are solvable as written, and the finished
 project ends at **89/89 tests passing**, `tsc` clean, `npm run lint` clean, and
 `npm run build` successful. Each chapter's app was also rendered in a real headless browser,
 not just asserted against in jsdom — which is how the most serious defect was found.
