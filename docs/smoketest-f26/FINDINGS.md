@@ -217,3 +217,73 @@ columns or softening the prose so the graded contract matches what is checked.
 `src/text.test.tsx` matches `/Hello World/`, and this chapter has students add a button
 labelled `Log Hello World`. The Chapter 1 requirement is therefore silently satisfied by
 Chapter 2's work. Harmless here, but it is the kind of overlap that can hide a regression.
+
+---
+
+## Chapter 3 — TypeScript
+
+Four tasks, run in the book's order. All four merge cleanly and **all are solvable exactly
+as written**, under the book's own constraints (no `for`/`while`/recursion, no mutation).
+
+| Task | Branch | Result |
+| --- | --- | --- |
+| Primitives and Control Flow | `task-functions` | ✅ 15/15 |
+| Arrays | `task-arrays` | ✅ 24/24 cumulative |
+| Objects | `task-objects` | ✅ 34/34 cumulative |
+| Nested Data | `task-nested` | ✅ **44/44 cumulative** |
+
+`npx tsc --noEmit` clean and `npm run lint` clean at every step.
+
+The immutability enforcement in these tests deserves praise: every describe block carries an
+`afterEach` that re-asserts the input constants are unchanged, with the comment "If you fail
+these, you aren't using map/filter/reduce/etc. properly!". That is a well-designed way to
+make an invisible requirement (immutability) produce a visible failure.
+
+#### F26-12 — `task-objects` starter code does not type-check · **BUG**
+
+Immediately after `git merge upstream/task-objects`, before the student writes a line:
+
+```
+$> npx tsc --noEmit
+src/objects.ts(13,5): error TS2740: Type '{}' is missing the following properties
+from type 'Question': id, name, body, type, and 4 more.
+```
+
+`makeBlankQuestion` is stubbed as `return {};`. Every *other* stub in the book's starter
+files returns a type-correct placeholder (`return 0;`, `return "";`, `return question;`,
+`return [];`), so this one is an oversight rather than a design choice.
+
+It matters because the two commands the book has already taught disagree. `npm run test:cov`
+works (Jest strips types via Babel and never type-checks), but `npm run start` — the command
+students learned in Chapter 1 and are most likely to reach for — fails to compile with an
+error in code they did not write.
+
+Recommended fix in the refreshed task branch: give the stub a type-correct but wrong
+placeholder, e.g. returning a fully-formed `Question` with `points: 0` and an empty name, so
+the project compiles while the exercise stays unsolved.
+
+#### F26-13 — `task-nested` depends on `task-objects` being solved, silently · **PAPERCUT**
+
+`nested.ts` instructs: "Reuse the `makeBlankQuestion` you defined in the `objects.ts` file",
+and `addNewQuestion`'s tests compare against fully-formed blank questions.
+
+`upstream/task-nested` ships the **unsolved** `objects.ts` (verified: it still contains
+`return {};`). Git's three-way merge means a student who already solved and merged
+`task-objects` keeps their own version — that path works, and was verified end to end here.
+But a student who skipped or has not yet merged the Objects task gets the stub, and then
+sees `addNewQuestion` fail plus a project that will not compile, with nothing in the Nested
+chapter explaining why. The chapter should state the prerequisite explicitly.
+
+#### F26-14 — `fahrenheitToCelius` is misspelled · **NOTE**
+
+The function is named `fahrenheitToCelius` (missing the `s` in "Celsius") in the starter
+file, in `functions.test.ts`, and in the book. Purely cosmetic, and renaming it means
+touching all three at once — but it is the first function students ever write in this course,
+and it teaches them a misspelling.
+
+#### F26-15 — Upstream has a stray `updated-task-nested` branch · **NOTE**
+
+The upstream repo carries both `task-nested` and `updated-task-nested`. The book points at
+`task-nested`, which is correct: the only difference between them is one `package-lock.json`
+commit (the same `dev` → `devOptional` metadata churn as F26-05). Nothing is broken, but a
+student browsing the branch list may reasonably think they are on the wrong one.
