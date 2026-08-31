@@ -121,3 +121,99 @@ required text is present in `src/App.tsx`.
 The file is actually `src/text.test.tsx` (lowercase `test`). On a case-sensitive filesystem a
 student searching for `text.Test.tsx` will not find it. Jest also only picks up the
 lowercase form, so the capitalised name in the book is wrong in two ways.
+
+---
+
+## Chapter 2 — Basic App
+
+### 2-app/concepts.html — All the Concepts
+
+Reading-only page, no task. Reads fine.
+
+#### F26-07 — Unfinished `TODO` is visible to students · **PAPERCUT**
+
+The "What is Bootstrap?" section renders this line to the reader:
+
+> TODO: Put an image of a Bootstrap website here
+
+### 2-app/editing.html — Basics of HTML and CSS
+
+The book's commands were run verbatim:
+
+```
+$> git pull upstream main
+$> git fetch upstream task-html-css
+$> git checkout -b solved-html-css
+$> git merge upstream/task-html-css
+```
+
+Merged cleanly, adding `src/HtmlCss.test.tsx` and `public/tasks/task-html-css.md`.
+As the book promises, the new tests fail immediately: **6 failed, 4 passed**.
+
+All seven listed requirements were then implemented in `src/App.tsx` / `src/App.css`
+(heading, image with alt text, 3-item list, header background color, Bootstrap button
+reading `Log Hello World` that logs `Hello World!`, and inline-styled red rectangles in two
+columns). Result: **10/10 tests pass**, `npm run lint` clean.
+
+So the chapter is *solvable exactly as written*. Two real defects showed up anyway.
+
+#### F26-08 — Bootstrap's CSS is never installed or imported · **BUG · FIXED**
+
+This chapter introduces Bootstrap ("We're going to use the Bootstrap library quite a lot"),
+has students render a `<Button>`, and ends with a **Two Column Layout** section using
+`Container` / `Row` / `Col`. But the repository depended only on `react-bootstrap` — the
+`bootstrap` package that carries the actual stylesheet was never installed, and nothing
+imported it.
+
+`react-bootstrap` ships components, not CSS. So the tests passed while the page was wrong:
+the button rendered as a bare grey browser button, and the two columns **stacked
+vertically instead of sitting side by side**. A student who did everything right saw a
+broken-looking page with a green test suite, and had no way to tell whether they had made a
+mistake. `src/index.tsx` carries the comment "You will not need to modify this file", so a
+student could not reasonably be expected to fix this themselves — it had to be fixed here.
+
+The tests could not catch it because jsdom does not apply `.css` files, so the classes
+`btn btn-primary` were present in the markup even with no stylesheet behind them.
+
+**Fix applied:** added `bootstrap@^5.3.3` to `dependencies` and
+`import "bootstrap/dist/css/bootstrap.min.css";` to `src/index.tsx`, ahead of the project's
+own stylesheets so student CSS still wins. Verified in a real headless browser: the button
+now renders as a Bootstrap primary button and the two columns render side by side. Tests
+still 10/10, lint still clean.
+
+#### F26-09 — The "background color of the header" test could never fail · **BUG · FIXED**
+
+The task sheet grades "Change the background color of the header area" at 2 points. The
+test was:
+
+```tsx
+const banner = screen.getByRole("banner");
+expect(banner).not.toHaveStyle({ "background-color": "rgb(40, 44, 52)" });
+```
+
+Because jsdom never loads `App.css`, the `<header>` has *no* background color during the
+test, so `not.toHaveStyle(...)` is trivially satisfied. **Verified: this test passed on a
+completely unmodified `App.css`.** Students got the 2 points for doing nothing, and a
+student who genuinely wanted feedback got none.
+
+**Fix applied:** the test now reads `src/App.css`, extracts the `background-color`
+declaration from the `.App-header` rule, and asserts it is no longer `#282c34`. Verified
+both directions: it **fails** on the original stylesheet and **passes** once the color is
+changed.
+
+#### F26-10 — The task sheet asks for more than the tests check · **PAPERCUT**
+
+The book's requirement reads:
+
+> Put a red-filled rectangle in **each column** using a `div` tag with `width`, `height`, and `backgroundColor` styles.
+
+but the test only scans for *any one* element with a red background, and nothing anywhere
+checks that a `Container`/`Row`/`Col` layout exists at all. A student can score full marks
+without ever building the two-column layout the section teaches. Worth either testing the
+columns or softening the prose so the graded contract matches what is checked.
+
+#### F26-11 — Chapter 1's test is satisfiable by Chapter 2's button · **NOTE**
+
+`src/text.test.tsx` matches `/Hello World/`, and this chapter has students add a button
+labelled `Log Hello World`. The Chapter 1 requirement is therefore silently satisfied by
+Chapter 2's work. Harmless here, but it is the kind of overlap that can hide a regression.
